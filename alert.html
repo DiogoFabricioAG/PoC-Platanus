@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚠️ Alerta de Seguridad</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .alert-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 550px;
+            width: 100%;
+            overflow: hidden;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .alert-icon {
+            font-size: 64px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .alert-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 15px 0 5px 0;
+        }
+
+        .alert-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .alert-body {
+            padding: 30px;
+        }
+
+        .threat-level {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .threat-level.danger {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+
+        .threat-percentage {
+            font-size: 36px;
+            font-weight: 700;
+            color: #dc3545;
+            transition: transform 0.3s ease;
+        }
+
+        .threat-label {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #666;
+        }
+
+        .findings {
+            margin: 20px 0;
+        }
+
+        .findings-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .findings-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .findings-list li {
+            padding: 10px;
+            background: #f8f9fa;
+            margin: 5px 0;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #555;
+            display: flex;
+            align-items: center;
+        }
+
+        .findings-list li::before {
+            content: "⚠️";
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
+        .screenshot-preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .screenshot-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            object-fit: contain;
+            transition: opacity 0.3s ease;
+        }
+
+        .updating {
+            opacity: 0.6;
+        }
+
+        .screenshot-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="alert-container">
+        <div class="alert-header">
+            <div class="alert-icon">🚨</div>
+            <h1 class="alert-title">¡PHISHING DETECTADO!</h1>
+            <p class="alert-subtitle">Se ha identificado contenido potencialmente peligroso</p>
+        </div>
+
+        <div class="alert-body" id="alertBody">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Analizando captura de pantalla...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        let currentData = null;
+
+        // Escuchar datos de detección inicial
+        ipcRenderer.on('phishing-detected', (event, data) => {
+            currentData = data;
+            displayAlert(data);
+        });
+
+        // Escuchar actualizaciones
+        ipcRenderer.on('update-detection', (event, data) => {
+            currentData = data;
+            updateAlert(data);
+        });
+
+        function displayAlert(data) {
+            const alertBody = document.getElementById('alertBody');
+            
+            const levelClass = data.percentage >= 70 ? 'danger' : '';
+            
+            alertBody.innerHTML = `
+                <div class="threat-level ${levelClass}">
+                    <div>
+                        <div class="threat-label">Nivel de Amenaza</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #dc3545; margin-top: 5px;">
+                            <span id="threatLevel">${data.level}</span>
+                        </div>
+                    </div>
+                    <div class="threat-percentage" id="threatPercentage">${data.percentage}%</div>
+                </div>
+
+                <div class="findings">
+                    <div class="findings-title">⚠️ Hallazgos Detectados:</div>
+                    <ul class="findings-list" id="findingsList">
+                        ${data.findings.map(finding => `<li>${finding}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="screenshot-preview">
+                    <div class="screenshot-label">
+                        📸 Captura en Tiempo Real
+                        <span class="live-indicator">
+                            <span class="live-dot"></span>
+                            LIVE
+                        </span>
+                    </div>
+                    <img src="data:image/png;base64,${data.screenshotBase64}" alt="Screenshot" id="screenshotImg">
+                </div>
+
+                <div class="timestamp">
+                    <span>🕐 Actualizado: <span id="timestampText">${data.timestamp}</span></span>
+                    <span style="color: #28a745; font-size: 11px;">● Actualizando cada 10s</span>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="closeAlert()">Cerrar</button>
+                    <button class="btn btn-primary" onclick="takeAction()">Ver Detalles</button>
+                </div>
+            `;
+        }
+
+        function updateAlert(data) {
+            // Actualizar porcentaje con animación
+            const percentageEl = document.getElementById('threatPercentage');
+            if (percentageEl) {
+                percentageEl.style.transform = 'scale(1.2)';
+                percentageEl.textContent = data.percentage + '%';
+                setTimeout(() => {
+                    percentageEl.style.transform = 'scale(1)';
+                }, 300);
+            }
+
+            // Actualizar nivel
+            const levelEl = document.getElementById('threatLevel');
+            if (levelEl) {
+                levelEl.textContent = data.level;
+            }
+
+            // Actualizar timestamp
+            const timestampEl = document.getElementById('timestampText');
+            if (timestampEl) {
+                timestampEl.textContent = data.timestamp;
+            }
+
+            // Actualizar imagen con efecto de transición
+            const imgEl = document.getElementById('screenshotImg');
+            if (imgEl && data.screenshotBase64) {
+                imgEl.classList.add('updating');
+                setTimeout(() => {
+                    imgEl.src = 'data:image/png;base64,' + data.screenshotBase64;
+                    imgEl.classList.remove('updating');
+                }, 150);
+            }
+
+            console.log('Alerta actualizada:', data.timestamp);
+        }
+
+        function closeAlert() {
+            ipcRenderer.send('close-alert');
+        }
+
+        function takeAction() {
+            alert('Esta función abriría los detalles completos del análisis');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "phishing-detector-poc",
+  "version": "1.0.0",
+  "description": "PoC de detector de phishing con alertas visuales",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": ["electron", "phishing", "security"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}
