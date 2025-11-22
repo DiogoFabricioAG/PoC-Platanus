@@ -88,6 +88,64 @@ with open(filename, "rb") as image_file:
   }, 200); // Esperar 200ms para que la ventana se oculte
 }
 
+function detectAppType(processName, windowTitle) {
+  const pName = processName.toLowerCase();
+  const title = windowTitle.toLowerCase();
+  
+  // Detectar navegadores
+  const browsers = {
+    'chrome': { name: 'Google Chrome', icon: '🌐', type: 'navegador' },
+    'msedge': { name: 'Microsoft Edge', icon: '🌐', type: 'navegador' },
+    'firefox': { name: 'Mozilla Firefox', icon: '🦊', type: 'navegador' },
+    'brave': { name: 'Brave Browser', icon: '🦁', type: 'navegador' },
+    'opera': { name: 'Opera', icon: '🌐', type: 'navegador' },
+    'vivaldi': { name: 'Vivaldi', icon: '🌐', type: 'navegador' },
+    'chromium': { name: 'Chromium', icon: '🌐', type: 'navegador' },
+    'iexplore': { name: 'Internet Explorer', icon: '🌐', type: 'navegador' },
+    'microsoftedge': { name: 'Microsoft Edge', icon: '🌐', type: 'navegador' }
+  };
+  
+  // Detectar WhatsApp
+  if (pName.includes('whatsapp')) {
+    return { name: 'WhatsApp', icon: '💬', type: 'mensajería', category: 'WhatsApp' };
+  }
+  
+  // Detectar navegadores
+  for (const [key, value] of Object.entries(browsers)) {
+    if (pName.includes(key)) {
+      return { 
+        name: value.name, 
+        icon: value.icon, 
+        type: value.type,
+        category: 'Navegador Web'
+      };
+    }
+  }
+  
+  // Detectar Discord
+  if (pName.includes('discord')) {
+    return { name: 'Discord', icon: '💬', type: 'mensajería', category: 'Discord' };
+  }
+  
+  // Detectar Telegram
+  if (pName.includes('telegram')) {
+    return { name: 'Telegram', icon: '✈️', type: 'mensajería', category: 'Telegram' };
+  }
+  
+  // Detectar Slack
+  if (pName.includes('slack')) {
+    return { name: 'Slack', icon: '💼', type: 'mensajería', category: 'Slack' };
+  }
+  
+  // Otras aplicaciones
+  return { 
+    name: processName, 
+    icon: '📱', 
+    type: 'aplicación',
+    category: 'Otra Aplicación'
+  };
+}
+
 async function getActiveWindow() {
   return new Promise((resolve) => {
     // Script de PowerShell para obtener la ventana activa
@@ -149,10 +207,15 @@ if ($process) {
       try {
         if (code === 0 && output.trim()) {
           const data = JSON.parse(output.trim());
+          const appInfo = detectAppType(data.processName, data.title);
+          
           resolve({
             title: data.title,
             owner: data.processName,
-            appName: data.processName
+            appName: appInfo.name,
+            appIcon: appInfo.icon,
+            appType: appInfo.type,
+            category: appInfo.category
           });
         } else {
           resolve(null);
@@ -182,15 +245,29 @@ function startMonitoring() {
 }
 
 async function captureAndAnalyze() {
-  console.log('Capturando pantalla...');
+  console.log('Verificando ventana activa...');
   
   // Obtener ventana activa
   const activeWindow = await getActiveWindow();
   
   if (activeWindow) {
-    console.log('🎯 Ventana activa:', activeWindow.owner);
+    console.log('🎯 Ventana activa:', activeWindow.appIcon, activeWindow.appName);
+    console.log('   Categoría:', activeWindow.category);
     console.log('   Título:', activeWindow.title);
   }
+  
+  // Solo capturar si es navegador o WhatsApp
+  const shouldCapture = activeWindow && (
+    activeWindow.category === 'Navegador Web' || 
+    activeWindow.category === 'WhatsApp'
+  );
+  
+  if (!shouldCapture) {
+    console.log('⏸️  No es navegador ni WhatsApp, saltando captura...');
+    return;
+  }
+  
+  console.log('📸 Capturando pantalla...');
   
   captureScreenExcludingElectron((error, base64Image) => {
     if (error) {

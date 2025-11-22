@@ -143,7 +143,7 @@
         }
 
         .active-window-info {
-            background: #e7f3ff;
+            background: linear-gradient(135deg, #e7f3ff 0%, #f0f8ff 100%);
             border-left: 4px solid #0066cc;
             padding: 15px;
             border-radius: 8px;
@@ -169,8 +169,31 @@
         }
 
         .active-window-info .app-name {
-            font-weight: 600;
+            font-weight: 700;
             color: #0052a3;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .active-window-info .category-badge {
+            display: inline-block;
+            background: #0066cc;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .active-window-info .category-badge.navegador {
+            background: #4CAF50;
+        }
+
+        .active-window-info .category-badge.mensajeria {
+            background: #2196F3;
         }
 
         .active-window-info .window-title {
@@ -344,11 +367,16 @@
             // Construir sección de ventana activa
             let activeWindowHtml = '';
             if (data.activeWindow) {
+                const categoryClass = data.activeWindow.appType || 'default';
                 activeWindowHtml = `
                     <div class="active-window-info">
                         <div class="title">🎯 Ventana Detectada con Focus</div>
                         <div class="details">
-                            <div><span class="app-name">${data.activeWindow.owner}</span></div>
+                            <div class="app-name">
+                                <span>${data.activeWindow.appIcon || '📱'}</span>
+                                <span>${data.activeWindow.appName || data.activeWindow.owner}</span>
+                                <span class="category-badge ${categoryClass}">${data.activeWindow.category || 'App'}</span>
+                            </div>
                             <div class="window-title">${data.activeWindow.title}</div>
                         </div>
                     </div>
