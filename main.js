@@ -88,6 +88,89 @@ with open(filename, "rb") as image_file:
   }, 200); // Esperar 200ms para que la ventana se oculte
 }
 
+async function getActiveWindow() {
+  return new Promise((resolve) => {
+    // Script de PowerShell para obtener la ventana activa
+    const psScript = `
+Add-Type @"
+  using System;
+  using System.Runtime.InteropServices;
+  using System.Text;
+  public class Win32 {
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+    
+    [DllImport("user32.dll")]
+    public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+    
+    [DllImport("user32.dll", SetLastError=true)]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+  }
+"@
+
+$hwnd = [Win32]::GetForegroundWindow()
+$title = New-Object System.Text.StringBuilder 256
+[void][Win32]::GetWindowText($hwnd, $title, $title.Capacity)
+
+$processId = 0
+[Win32]::GetWindowThreadProcessId($hwnd, [ref]$processId) | Out-Null
+
+$process = Get-Process -Id $processId -ErrorAction SilentlyContinue
+
+if ($process) {
+  $result = @{
+    title = $title.ToString()
+    processName = $process.ProcessName
+    processPath = $process.Path
+  } | ConvertTo-Json -Compress
+  Write-Output $result
+}
+`;
+
+    const ps = spawn('powershell.exe', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      psScript
+    ]);
+
+    let output = '';
+    let errorOutput = '';
+
+    ps.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    ps.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+    });
+
+    ps.on('close', (code) => {
+      try {
+        if (code === 0 && output.trim()) {
+          const data = JSON.parse(output.trim());
+          resolve({
+            title: data.title,
+            owner: data.processName,
+            appName: data.processName
+          });
+        } else {
+          resolve(null);
+        }
+      } catch (error) {
+        console.error('Error parseando respuesta PowerShell:', error);
+        resolve(null);
+      }
+    });
+
+    // Timeout de 3 segundos
+    setTimeout(() => {
+      ps.kill();
+      resolve(null);
+    }, 3000);
+  });
+}
+
 function startMonitoring() {
   // Captura inicial
   captureAndAnalyze();
@@ -98,8 +181,16 @@ function startMonitoring() {
   }, 10000);
 }
 
-function captureAndAnalyze() {
+async function captureAndAnalyze() {
   console.log('Capturando pantalla...');
+  
+  // Obtener ventana activa
+  const activeWindow = await getActiveWindow();
+  
+  if (activeWindow) {
+    console.log('🎯 Ventana activa:', activeWindow.owner);
+    console.log('   Título:', activeWindow.title);
+  }
   
   captureScreenExcludingElectron((error, base64Image) => {
     if (error) {
@@ -117,7 +208,8 @@ function captureAndAnalyze() {
         'Solicitud de credenciales bancarias',
         'Dominio no verificado'
       ],
-      screenshotBase64: base64Image
+      screenshotBase64: base64Image,
+      activeWindow: activeWindow // Agregar info de ventana activa
     };
     
     // Mostrar o actualizar alerta

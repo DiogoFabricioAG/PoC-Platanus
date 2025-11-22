@@ -142,6 +142,43 @@
             font-size: 16px;
         }
 
+        .active-window-info {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .active-window-info .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0066cc;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .active-window-info .details {
+            font-size: 13px;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .active-window-info .app-name {
+            font-weight: 600;
+            color: #0052a3;
+        }
+
+        .active-window-info .window-title {
+            color: #666;
+            font-style: italic;
+            font-size: 12px;
+        }
+
         .screenshot-preview {
             margin: 20px 0;
             text-align: center;
@@ -304,6 +341,20 @@
             
             const levelClass = data.percentage >= 70 ? 'danger' : '';
             
+            // Construir sección de ventana activa
+            let activeWindowHtml = '';
+            if (data.activeWindow) {
+                activeWindowHtml = `
+                    <div class="active-window-info">
+                        <div class="title">🎯 Ventana Detectada con Focus</div>
+                        <div class="details">
+                            <div><span class="app-name">${data.activeWindow.owner}</span></div>
+                            <div class="window-title">${data.activeWindow.title}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             alertBody.innerHTML = `
                 <div class="threat-level ${levelClass}">
                     <div>
@@ -314,6 +365,8 @@
                     </div>
                     <div class="threat-percentage" id="threatPercentage">${data.percentage}%</div>
                 </div>
+
+                ${activeWindowHtml}
 
                 <div class="findings">
                     <div class="findings-title">⚠️ Hallazgos Detectados:</div>
@@ -378,7 +431,15 @@
                 }, 150);
             }
 
+            // Si hay nueva información de ventana activa, reconstruir toda la alerta
+            if (data.activeWindow) {
+                displayAlert(data);
+            }
+
             console.log('Alerta actualizada:', data.timestamp);
+            if (data.activeWindow) {
+                console.log('Ventana activa:', data.activeWindow.owner);
+            }
         }
 
         function closeAlert() {
