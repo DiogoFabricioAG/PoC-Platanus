@@ -28,7 +28,7 @@ function createMainWindow() {
   }, 5000);
 }
 
-function captureScreenExcludingElectron(callback) {
+function captureScreenExcludingElectron(callback, activeWindow = null) {
   // Ocultar ventana de alerta antes de capturar
   const wasVisible = alertWindow && !alertWindow.isDestroyed() && alertWindow.isVisible();
   
@@ -38,22 +38,60 @@ function captureScreenExcludingElectron(callback) {
   
   // Esperar un momento para que la ventana se oculte completamente
   setTimeout(() => {
-    // Capturar pantalla usando pyautogui
-    const pythonScript = `
+    // Script de Python para capturar solo la ventana activa
+    let pythonScript = `
 import pyautogui
 from datetime import datetime
 import os
 import base64
+import sys
+
+try:
+    import win32gui
+    import win32con
+    HAS_WIN32 = True
+except ImportError:
+    HAS_WIN32 = False
+    print("win32gui not available, using full screen capture", file=sys.stderr)
 
 # Crear carpeta si no existe
 if not os.path.exists('screenshots'):
     os.makedirs('screenshots')
 
-# Capturar pantalla
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 filename = f"screenshots/screenshot_{timestamp}.png"
-screenshot = pyautogui.screenshot()
-screenshot.save(filename)
+
+if HAS_WIN32:
+    try:
+        # Obtener la ventana activa
+        hwnd = win32gui.GetForegroundWindow()
+        
+        # Hacer que la ventana esté al frente y visible
+        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+        win32gui.SetForegroundWindow(hwnd)
+        
+        # Esperar un poco para que se actualice
+        import time
+        time.sleep(0.1)
+        
+        # Obtener dimensiones de la ventana
+        left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+        width = right - left
+        height = bottom - top
+        
+        # Capturar la región de la ventana usando pyautogui
+        screenshot = pyautogui.screenshot(region=(left, top, width, height))
+        screenshot.save(filename)
+        
+    except Exception as e:
+        print(f"Error capturando ventana: {e}", file=sys.stderr)
+        # Fallback a captura completa
+        screenshot = pyautogui.screenshot()
+        screenshot.save(filename)
+else:
+    # Captura de pantalla completa si no hay win32gui
+    screenshot = pyautogui.screenshot()
+    screenshot.save(filename)
 
 # Convertir a base64
 with open(filename, "rb") as image_file:
@@ -70,7 +108,7 @@ with open(filename, "rb") as image_file:
     });
     
     python.stderr.on('data', (data) => {
-      console.error(`Error: ${data}`);
+      console.error(`Python stderr: ${data}`);
     });
     
     python.on('close', (code) => {
@@ -267,7 +305,7 @@ async function captureAndAnalyze() {
     return;
   }
   
-  console.log('📸 Capturando pantalla...');
+  console.log('📸 Capturando ventana activa...');
   
   captureScreenExcludingElectron((error, base64Image) => {
     if (error) {
